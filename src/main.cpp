@@ -5,14 +5,12 @@
 #include "FusionEKF.h"
 #include "tools.h"
 
+
+using json = nlohmann::json;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::string;
 using std::vector;
-
-// for convenience
-using json = nlohmann::json;
-
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
@@ -31,7 +29,6 @@ string hasData(string s) {
 
 int main() {
   uWS::Hub h;
-
   // Create a Kalman Filter instance
   FusionEKF fusionEKF;
 
@@ -57,55 +54,12 @@ int main() {
         if (event == "telemetry") {
           // j[1] is the data JSON object
           string sensor_measurement = j[1]["sensor_measurement"];
-          
-          MeasurementPackage meas_package;
+
           std::istringstream iss(sensor_measurement);
+          MeasurementPackage meas_package = MeasurementParser::parse(iss);
           
-          long long timestamp;
-
-          // reads first element from the current line
-          string sensor_type;
-          iss >> sensor_type;
-
-          if (sensor_type.compare("L") == 0) {
-            meas_package.sensor_type_ = MeasurementPackage::LASER;
-            meas_package.raw_measurements_ = VectorXd(2);
-            float px;
-            float py;
-            iss >> px;
-            iss >> py;
-            meas_package.raw_measurements_ << px, py;
-            iss >> timestamp;
-            meas_package.timestamp_ = timestamp;
-          } else if (sensor_type.compare("R") == 0) {
-            meas_package.sensor_type_ = MeasurementPackage::RADAR;
-            meas_package.raw_measurements_ = VectorXd(3);
-            float ro;
-            float theta;
-            float ro_dot;
-            iss >> ro;
-            iss >> theta;
-            iss >> ro_dot;
-            meas_package.raw_measurements_ << ro,theta, ro_dot;
-            iss >> timestamp;
-            meas_package.timestamp_ = timestamp;
-          }
-
-          float x_gt;
-          float y_gt;
-          float vx_gt;
-          float vy_gt;
-          iss >> x_gt;
-          iss >> y_gt;
-          iss >> vx_gt;
-          iss >> vy_gt;
-
-          VectorXd gt_values(4);
-          gt_values(0) = x_gt;
-          gt_values(1) = y_gt; 
-          gt_values(2) = vx_gt;
-          gt_values(3) = vy_gt;
-          ground_truth.push_back(gt_values);
+          
+          ground_truth.push_back(meas_package.ground_truth_);
           
           // Call ProcessMeasurement(meas_package) for Kalman filter
           fusionEKF.ProcessMeasurement(meas_package);       
@@ -142,6 +96,7 @@ int main() {
 
         }  // end "telemetry" if
 
+
       } else {
         string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
@@ -169,4 +124,5 @@ int main() {
   }
   
   h.run();
+  return 0;
 }

@@ -3,11 +3,6 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-/* 
- * Please note that the Eigen library does not initialize 
- *   VectorXd or MatrixXd objects with zeros upon creation.
- */
-
 KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
@@ -22,20 +17,49 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
   Q_ = Q_in;
 }
 
-void KalmanFilter::Predict() {
-  /**
-   * TODO: predict the state
-   */
+void KalmanFilter::Predict(float delta_T) {
+  F_(0, 2) = delta_T;
+  F_(1, 3) = delta_T;
+
+  x_ = F_ * x_;
+  P_ = F_ * P_ * F_.transpose() + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Kalman Filter equations
-   */
+  VectorXd z_pred = H_ * x_;
+  VectorXd y = z - z_pred;
+  Estimate(y);
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Extended Kalman Filter equations
-   */
+  VectorXd z_pred = tools.ConvertCartesianToPolar(x_);
+  VectorXd y = z - z_pred;
+    
+  if (y(1) > M_PI) y(1) -= 2 * M_PI;
+  if (y(1) < -M_PI) y(1) += 2 * M_PI;
+
+  Estimate(y);
+}
+
+/**
+ * PRIVATE
+ */
+
+MatrixXd KalmanFilter::Gain() {
+  MatrixXd Ht = H_.transpose();
+  MatrixXd PHt = P_ * Ht;
+  MatrixXd S = H_ * PHt + R_;
+  MatrixXd Si = S.inverse();
+  MatrixXd K = PHt * Si;
+  return K;
+}
+
+void KalmanFilter::Estimate(const VectorXd &y) {
+  MatrixXd K = Gain();
+  int size = x_.size();
+  
+  MatrixXd I = MatrixXd::Identity(size, size);
+  
+  x_ = x_ + (K * y);
+  P_ = (I - K * H_) * P_;
 }

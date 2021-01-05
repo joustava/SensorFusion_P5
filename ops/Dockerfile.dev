@@ -1,0 +1,45 @@
+# build: docker build -t joustava/ekf -f ./ops/Dockerfile.dev .
+# run: docker run \
+#             -it \
+#             --rm \ 
+#             -p 4567:4567 \  
+#             --mount type=bind,source=$(pwd)/src,target=/project/src \
+#             --rm joustava/ekf bash
+#
+FROM archlinux
+
+RUN pacman -Syyu --noconfirm
+RUN pacman-db-upgrade
+RUN pacman -S --noconfirm \
+  git \
+  libuv \
+  openssl \
+  gcc \
+  cmake \
+  make \
+  boost \
+  fftw \
+  freeglut \
+  gcc-fortran \
+  suitesparse
+
+WORKDIR /deps
+
+RUN git clone https://github.com/uWebSockets/uWebSockets \
+  && cd uWebSockets \
+  && git checkout e94b6e1 \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make \ 
+  && make install
+
+WORKDIR /project
+COPY . .
+
+RUN mkdir build \
+  && cd build \
+  && cmake .. \
+  && make
+
+CMD ["./build/ExtendedKF"]

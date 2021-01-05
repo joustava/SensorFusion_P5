@@ -1,5 +1,5 @@
-#ifndef FusionEKF_H_
-#define FusionEKF_H_
+#ifndef _FusionEKF_H_
+#define _FusionEKF_H_
 
 #include <fstream>
 #include <string>
@@ -10,31 +10,37 @@
 #include "tools.h"
 
 class FusionEKF {
- public:
+  public:
   /**
-   * Constructor.
+   * @brief Construct a new Fusion E K F object
+   * 
    */
   FusionEKF();
 
   /**
-   * Destructor.
+   * @brief Destroy the Fusion E K F object
+   * 
    */
   virtual ~FusionEKF();
 
   /**
-   * Run the whole flow of the Kalman Filter from here.
+   * @brief Public: Handle a complete filter cycle, initializes for you.
+   * 
+   * @param measurement_pack 
    */
   void ProcessMeasurement(const MeasurementPackage &measurement_pack);
 
   /**
-   * Kalman Filter update and prediction math lives in here.
+   * @brief Kalman Filter update and prediction math lives in here.
+   * 
    */
   KalmanFilter ekf_;
 
- private:
+  private:
   // check whether the tracking toolbox was initialized or not (first measurement)
   bool is_initialized_;
-
+  float noise_ax;
+  float noise_ay;
   // previous timestamp
   long long previous_timestamp_;
 
@@ -43,7 +49,27 @@ class FusionEKF {
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
-  Eigen::MatrixXd Hj_;
+  
+  /**
+   * @brief Private: Initialise EKF when needed.
+   * 
+   * @param measurement_pack 
+   */
+  void ProcessInit(const MeasurementPackage &measurement_pack);
+  
+  /**
+   * @brief Private: Handle EKF prediction step.
+   * 
+   * @param measurement_pack 
+   */
+  void ProcessPrediction(const MeasurementPackage &measurement_pack);
+  
+  /**
+   * @brief Private: Handle EKF update step.
+   * 
+   * @param measurement_pack 
+   */
+  void ProcessUpdate(const MeasurementPackage &measurement_pack);
 };
 
 #endif // FusionEKF_H_

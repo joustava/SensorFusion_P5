@@ -1,22 +1,47 @@
-#ifndef KALMAN_FILTER_H_
-#define KALMAN_FILTER_H_
+#ifndef _KALMAN_FILTER_H_
+#define _KALMAN_FILTER_H_
 
 #include "Eigen/Dense"
-
+#include "tools.h"
 class KalmanFilter {
- public:
+  Tools tools;
+  
   /**
-   * Constructor
+   * @brief Private: Calculate Optimal Kalman gain 
+   * 
+   * from: https://en.wikipedia.org/wiki/Kalman_filter
+   * "The Kalman gain is the relative weight given to the measurements and current state estimate,
+   * and can be "tuned" to achieve a particular performance. With a high gain, the filter places more 
+   * weight on the most recent measurements, and thus follows them more responsively. 
+   * With a low gain, the filter follows the model predictions more closely. At the extremes, 
+   * a high gain close to one will result in a more jumpy estimated trajectory, while a low gain close 
+   * to zero will smooth out noise but decrease the responsiveness."
+   * 
+   * @return MatrixXd 
+   */
+  Eigen::MatrixXd Gain();
+  
+  /**
+   * @brief Private: Calculate new state estimates and updates the filter
+   * 
+   * @param y VectorXd
+   * @return MatrixXd 
+   */
+  void Estimate(const Eigen::VectorXd &y);
+
+  public:
+  /**
+   * @brief Construct a new KalmanFilter object
    */
   KalmanFilter();
 
   /**
-   * Destructor
+   * @brief Destroy the KalmanFilter object
    */
   virtual ~KalmanFilter();
 
   /**
-   * Init Initializes Kalman filter
+   * @brief Public: Initializes Kalman filter
    * @param x_in Initial state
    * @param P_in Initial state covariance
    * @param F_in Transition matrix
@@ -28,20 +53,23 @@ class KalmanFilter {
             Eigen::MatrixXd &H_in, Eigen::MatrixXd &R_in, Eigen::MatrixXd &Q_in);
 
   /**
-   * Prediction Predicts the state and the state covariance
-   * using the process model
+   * @brief Public: Prediction Predicts the state and the state covariance
+   *                using the process model
+   * 
    * @param delta_T Time between k and k+1 in s
    */
-  void Predict();
+  void Predict(const float delta_T);
 
   /**
-   * Updates the state by using standard Kalman Filter equations
+   * @brief Public: Updates the state by using standard Kalman Filter equations
+   * 
    * @param z The measurement at k+1
    */
   void Update(const Eigen::VectorXd &z);
 
   /**
-   * Updates the state by using Extended Kalman Filter equations
+   * @brief Public: Updates the state by using Extended Kalman Filter equations
+   * 
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
@@ -65,4 +93,4 @@ class KalmanFilter {
   Eigen::MatrixXd R_;
 };
 
-#endif // KALMAN_FILTER_H_
+#endif // _KALMAN_FILTER_H_
