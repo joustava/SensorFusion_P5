@@ -56,7 +56,6 @@ void FusionEKF::ProcessInit(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       float rho = measurement_pack.raw_measurements_[0];
       float phi = measurement_pack.raw_measurements_[1];
-      float rho_d = measurement_pack.raw_measurements_[2];
 
       x_in << rho * cos(phi), 
               rho * sin(phi), 
@@ -117,7 +116,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
   /**
-   * Predict
+   * Prediction
    */
   ProcessPrediction(measurement_pack);
   

@@ -40,7 +40,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd &x_state) {
   float p_y = x_state(1);
   float v_x = x_state(2);
   float v_y = x_state(3);
-  
+
   float c1 = p_x * p_x + p_y * p_y;
   float c2 = sqrt(c1);
   float c3 = c1 * c2;
